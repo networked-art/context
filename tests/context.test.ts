@@ -26,6 +26,36 @@ function response(body: unknown, status = 200) {
   })
 }
 
+function setDocument() {
+  const target = new EventTarget()
+  const document = {
+    hidden: false,
+    addEventListener: target.addEventListener.bind(target),
+    removeEventListener: target.removeEventListener.bind(target),
+    dispatchEvent: target.dispatchEvent.bind(target),
+  }
+  const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'document')
+  Object.defineProperty(globalThis, 'document', {
+    configurable: true,
+    value: document,
+  })
+  return {
+    document,
+    show: () => {
+      document.hidden = false
+      target.dispatchEvent(new Event('visibilitychange'))
+    },
+    hide: () => {
+      document.hidden = true
+      target.dispatchEvent(new Event('visibilitychange'))
+    },
+    restore: () => {
+      if (descriptor) Object.defineProperty(globalThis, 'document', descriptor)
+      else delete (globalThis as { document?: unknown }).document
+    },
+  }
+}
+
 function setLocation(search: string) {
   const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'location')
   Object.defineProperty(globalThis, 'location', {
@@ -166,6 +196,63 @@ test('serializes identity-only and complete fixed query strings without a chain 
     [...identity.keys()],
     ['networked_collection', 'networked_token_id'],
   )
+})
+
+test('watch keeps one polling chain across visibility changes', async () => {
+  const dom = setDocument()
+  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+  const sources: string[] = []
+  let calls = 0
+  let stop = () => {}
+
+  try {
+    stop = watch(
+      {
+        collection: COLLECTION,
+        tokenId: 7,
+        intervalMs: 250,
+        // Honour the abort signal the way a real fetch does, so a chain that
+        // cancels another chain's request surfaces as a failure.
+        fetch: ((_input, init) => {
+          calls += 1
+          return new Promise((resolve, reject) => {
+            const timer = setTimeout(() => resolve(response(VALUES)), 40)
+            init?.signal?.addEventListener(
+              'abort',
+              () => {
+                clearTimeout(timer)
+                reject(new Error('aborted'))
+              },
+              { once: true },
+            )
+          })
+        }) as typeof fetch,
+      },
+      (context) => sources.push(context.source),
+    )
+
+    // Every hide/show cycle used to spawn an extra, permanent polling chain.
+    for (let cycle = 0; cycle < 2; cycle += 1) {
+      await sleep(100)
+      dom.hide()
+      await sleep(100)
+      dom.show()
+    }
+
+    calls = 0
+    await sleep(1_100)
+
+    // One chain polls ~4 times in 1.1s; each extra chain adds another ~4.
+    assert.ok(calls <= 6, `expected a single polling chain, saw ${calls} polls`)
+    assert.deepEqual(
+      sources.filter((source) => source !== 'api'),
+      [],
+      'a healthy API must never publish stale or fallback context',
+    )
+  } finally {
+    stop()
+    dom.restore()
+  }
 })
 
 test('watch marks the last good API context stale during an outage', async () => {

@@ -309,6 +309,12 @@ export function watch(
     )
   }
   const refresh = async () => {
+    // Cancel any pending poll so a visibility wake-up rejoins the single
+    // chain instead of starting a second one that aborts this one's request.
+    if (timer !== undefined) {
+      globalThis.clearTimeout(timer)
+      timer = undefined
+    }
     if (stopped || globalThis.document?.hidden) return schedule()
     controller?.abort()
     controller = new AbortController()
