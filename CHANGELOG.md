@@ -1,5 +1,13 @@
 # @networked-art/context
 
+## 0.1.2
+
+### Patch Changes
+
+- [`743eba8`](https://github.com/networked-art/context/commit/743eba8709515714aaeee5512623c98153d19b16) Thanks [@jwahdatehagh](https://github.com/jwahdatehagh)! - Pin the README's CDN example to a release that has the `watch` fix. The example
+  told artists to embed `0.1.0` in artwork meant to last, which spawns a polling
+  chain per tab switch and reports stale context against a healthy API.
+
 ## 0.1.1
 
 ### Patch Changes
