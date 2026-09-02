@@ -1,6 +1,6 @@
 {
   "name": "@networked-art/context",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Live Networked Art auction and patron context for interactive artwork",
   "type": "module",
   "license": "MIT",
