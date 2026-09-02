@@ -18,6 +18,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # Changesets needs the full history to resolve tags and changelogs.
+          fetch-depth: 0
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -38,12 +41,16 @@ jobs:
       - name: Test
         run: pnpm test
 
+      # v2 detects published packages through CHANGESETS_OUTPUT rather than by
+      # parsing stdout, which the Changesets v3 CLI no longer formats the way v1
+      # expected. Under v1 a publish succeeded but reported nothing published, so
+      # no tag was pushed and no GitHub release was created.
       - name: Create Release Pull Request or Publish
-        uses: changesets/action@v1
+        uses: changesets/action@v2
         with:
-          version: pnpm run version
-          publish: pnpm run release
+          version-script: pnpm run version
+          publish-script: pnpm run release
+          create-github-releases: true
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          # v2 no longer writes an .npmrc; auth comes from setup-node's registry-url.
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
