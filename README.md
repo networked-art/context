@@ -25,7 +25,7 @@ The current value is returned from `load`, passed to `watch` listeners, and publ
 Pin a version in permanent artwork. For strict CSP or long-term archival reliability, vendor `index.global.js` with the artwork instead of relying on a CDN.
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@networked-art/context@0.1.0/dist/index.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@networked-art/context@0.1.2/dist/index.global.js"></script>
 <script>
   NetworkedArt.load({
     collection: '0x0000000000000000000000000000000000000000',
