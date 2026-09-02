@@ -1,0 +1,45 @@
+{
+  "name": "@networked-art/context",
+  "version": "0.1.0",
+  "description": "Live Networked Art auction and patron context for interactive artwork",
+  "type": "module",
+  "license": "MIT",
+  "packageManager": "pnpm@10.32.1",
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc --project tsconfig.build.json && node scripts/build.mjs && node scripts/check-size.mjs",
+    "test": "pnpm build && node --import tsx --test tests/*.test.ts && node --test tests/distribution.test.mjs",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "pnpm test"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "unpkg": "./dist/index.global.js",
+  "jsdelivr": "./dist/index.global.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "pnpm": {
+    "overrides": {
+      "get-tsconfig": "4.14.0"
+    }
+  },
+  "devDependencies": {
+    "@types/node": "22.20.1",
+    "esbuild": "0.27.7",
+    "tsx": "4.21.0",
+    "typescript": "5.9.3"
+  }
+}
